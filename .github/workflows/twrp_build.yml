@@ -1,0 +1,48 @@
+name: ChilleeeZDevments - Hot DEVMENTS ONLY (TWRP Build)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build TWRP by ChilleeeZDevments
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Set up build environment
+        run: |
+          echo "Company NAme : ChilleeeZDevments"
+          echo "Solgan : Hot DEVMENTS ONLY"
+          sudo apt-get update
+          sudo apt-get install -y git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z-dev ccache libgl1-mesa-dev libxml2-utils xsltproc unzip
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          
+      - name: Download TWRP manifest and sync
+        run: |
+          export PATH=~/bin:$PATH
+          mkdir ~/twrp
+          cd ~/twrp
+          repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1
+          repo sync -j$(nproc --all) --force-sync
+          
+      - name: Clone device tree
+        run: |
+          # We clone your specific repository for a05s
+          git clone https://github.com/${{ github.repository }} -b twrp-12.1 ~/twrp/device/samsung/a05s
+          
+      - name: Build TWRP
+        run: |
+          export PATH=~/bin:$PATH
+          cd ~/twrp
+          export ALLOW_MISSING_DEPENDENCIES=true
+          source build/envsetup.sh
+          lunch twrp_a05s-eng
+          mka recoveryimage
+          
+      - name: Upload TWRP image
+        uses: actions/upload-artifact@v4
+        with:
+          name: recovery-a05s
+          path: ~/twrp/out/target/product/a05s/recovery.img
