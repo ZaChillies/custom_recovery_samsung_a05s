@@ -47,11 +47,11 @@ git push -u origin twrp-12.1
 # 4. Trigger Workflow
 Write-Host "[4/5] Triggering the cloud build on GitHub Actions..." -ForegroundColor Cyan
 Start-Sleep -Seconds 5 # Wait for github to register the commit
-gh workflow run twrp_build.yml --ref twrp-12.1
+gh workflow run twrp_build.yml --ref twrp-12.1 --repo "$ghUser/custom_recovery_samsung_a05s"
 
 Write-Host "Waiting for GitHub servers to assign a build agent... (15 seconds)" -ForegroundColor Yellow
 Start-Sleep -Seconds 15
-$runId = gh run list --workflow twrp_build.yml --limit 1 --json databaseId -q ".[0].databaseId"
+$runId = gh run list --workflow twrp_build.yml --repo "$ghUser/custom_recovery_samsung_a05s" --limit 1 --json databaseId -q ".[0].databaseId"
 
 if (-not $runId) {
     Write-Host "[ERROR] Could not track the workflow. Please visit $forkUrl/actions to view it manually." -ForegroundColor Red
@@ -60,11 +60,11 @@ if (-not $runId) {
 }
 
 Write-Host "Build started! Tracking progress... (This process takes ~15-25 minutes in the cloud)" -ForegroundColor Cyan
-gh run watch $runId
+gh run watch $runId --repo "$ghUser/custom_recovery_samsung_a05s"
 
 # 5. Download & Package
 Write-Host "[5/5] Build finished! Downloading your new recovery image..." -ForegroundColor Green
-gh run download $runId -n recovery-a05s
+gh run download $runId -n recovery-a05s --repo "$ghUser/custom_recovery_samsung_a05s"
 if (Test-Path "recovery-a05s\recovery.img") {
     Move-Item -Path "recovery-a05s\recovery.img" -Destination ".\recovery.img" -Force
     Remove-Item -Recurse -Force "recovery-a05s"
