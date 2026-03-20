@@ -29,12 +29,12 @@ if (-not $ghUser) {
 Write-Host "Logged in as $ghUser!" -ForegroundColor Green
 
 # Make git securely use GitHub CLI's active session without asking for password again
-gh auth setup-git
+gh auth setup-git --force
 
 # 2. Fork the repository
 Write-Host "[2/5] Creating your personal fork..." -ForegroundColor Cyan
-gh repo fork jokonotobot0/custom_recovery_samsung_a05s --clone=false
-Start-Sleep -Seconds 8
+gh api repos/jokonotobot0/custom_recovery_samsung_a05s/forks -X POST -F name=custom_recovery_samsung_a05s --silent
+Start-Sleep -Seconds 12
 
 # Always override origin to the user's fork
 $forkUrl = "https://github.com/$ghUser/custom_recovery_samsung_a05s"
@@ -45,12 +45,19 @@ Write-Host "Updated your remote 'origin' to your fork: $forkUrl" -ForegroundColo
 Write-Host "[3/5] Pushing ChilleeeZDevments build action to your fork..." -ForegroundColor Cyan
 git add .
 git commit -m "Trigger One-Click Build by ChilleeeZDevments"
-git push -u origin twrp-12.1
+
+$pushResult = git push -u origin twrp-12.1 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Git Push failed: $pushResult" -ForegroundColor Red
+    Write-Host "This means GitHub couldn't create your fork properly or you didn't grant permission in the browser." -ForegroundColor Yellow
+    Read-Host "Press Enter to exit..."
+    exit
+}
 
 # 4. Trigger Workflow
 Write-Host "[4/5] Triggering the cloud build on GitHub Actions..." -ForegroundColor Cyan
 Start-Sleep -Seconds 5 # Wait for github to register the commit
-gh workflow run twrp_build.yml --ref twrp-12.1 --repo "$ghUser/custom_recovery_samsung_a05s"
+gh workflow run twrp_build.yml --ref twrp-12.1 --repo "$ghUser/custom_recovery_samsung_a05s" 2>&1
 
 Write-Host "Waiting for GitHub servers to assign a build agent... (15 seconds)" -ForegroundColor Yellow
 Start-Sleep -Seconds 15
