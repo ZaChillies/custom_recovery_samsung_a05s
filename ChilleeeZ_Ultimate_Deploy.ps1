@@ -28,6 +28,10 @@ if (-not $ghUser) {
 }
 Write-Host "Logged in as $ghUser!" -ForegroundColor Green
 
+# Security Fix: Request permission to create GitHub Actions workflows
+Write-Host "Requesting 'workflow' action permissions. (Check your browser window if it pops up)..." -ForegroundColor Yellow
+gh auth refresh -h github.com -s workflow
+
 # Make git securely use GitHub CLI's active session without asking for password again
 gh auth setup-git --force
 
