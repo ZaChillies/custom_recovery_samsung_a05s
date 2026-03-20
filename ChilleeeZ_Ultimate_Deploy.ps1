@@ -28,10 +28,13 @@ if (-not $ghUser) {
 }
 Write-Host "Logged in as $ghUser!" -ForegroundColor Green
 
+# Make git securely use GitHub CLI's active session without asking for password again
+gh auth setup-git
+
 # 2. Fork the repository
 Write-Host "[2/5] Creating your personal fork..." -ForegroundColor Cyan
-gh repo fork jokonotobot0/custom_recovery_samsung_a05s --remote=false
-Start-Sleep -Seconds 3
+gh repo fork jokonotobot0/custom_recovery_samsung_a05s --clone=false
+Start-Sleep -Seconds 8
 
 # Always override origin to the user's fork
 $forkUrl = "https://github.com/$ghUser/custom_recovery_samsung_a05s"
